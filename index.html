@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pênalti: O Goleiro Inteligente</title>
+    <title>O Sistema: O Jogo Impossível</title>
     <style>
         :root {
-            --grass-color: #2e8b57;
+            --grass-color: #1a472a;
             --line-color: #ffffff;
-            --text-color: #333;
+            --accent-color: #9b59b6; /* Cor mais tecnológica/psicológica */
+            --danger-color: #e74c3c;
+            --success-color: #2ecc71;
         }
 
         * {
@@ -19,7 +21,7 @@
         }
 
         body {
-            background-color: #1a1a1a;
+            background-color: #111;
             color: #fff;
             display: flex;
             justify-content: center;
@@ -32,16 +34,17 @@
             width: 100%;
             max-width: 500px;
             height: 100vh;
-            max-height: 800px;
-            background-color: var(--grass-color);
+            max-height: 850px;
+            background: linear-gradient(180deg, #0a1910 0%, var(--grass-color) 100%);
             position: relative;
             display: flex;
             flex-direction: column;
             border-left: 2px solid var(--line-color);
             border-right: 2px solid var(--line-color);
+            box-shadow: 0 0 30px rgba(155, 89, 182, 0.2);
         }
 
-        /* Telas */
+        /* Telas de UI */
         .screen {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -49,132 +52,153 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(10, 10, 10, 0.95);
             z-index: 100;
-            padding: 20px;
+            padding: 25px;
             text-align: center;
             transition: opacity 0.3s;
         }
         
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
 
-        h1, h2, h3 { margin-bottom: 15px; }
-        p { margin-bottom: 20px; line-height: 1.5; }
+        h1 { color: var(--accent-color); font-size: 2.2rem; margin-bottom: 10px; }
+        h2 { margin-bottom: 15px; font-size: 1.3rem; font-weight: normal; }
+        p { margin-bottom: 15px; line-height: 1.6; font-size: 1.1rem; }
+        .highlight { color: var(--accent-color); font-weight: bold; }
 
         button {
             padding: 15px 30px;
             font-size: 1.2rem;
             font-weight: bold;
             color: #fff;
-            background-color: #e67e22;
+            background-color: var(--accent-color);
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-            transition: transform 0.1s;
+            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);
+            transition: transform 0.1s, background 0.3s;
+            margin-top: 10px;
         }
         button:active { transform: scale(0.95); }
 
-        /* Campo de Jogo */
+        /* Placar */
         #scoreboard {
             display: flex;
             justify-content: space-between;
-            padding: 15px;
-            background: rgba(0,0,0,0.5);
-            font-size: 1.2rem;
+            padding: 15px 20px;
+            background: rgba(0,0,0,0.8);
+            font-size: 1.1rem;
             font-weight: bold;
             z-index: 10;
+            border-bottom: 2px solid var(--accent-color);
         }
+        
+        .score-player { color: var(--success-color); }
+        .score-machine { color: var(--danger-color); }
 
+        /* Campo de Jogo */
         #field {
             flex: 1;
             position: relative;
             border-top: 5px solid var(--line-color);
-            margin-top: 40px;
+            margin-top: 30px;
         }
 
-        /* Trave */
         .goal-post {
             position: absolute;
-            top: 0;
-            left: 15%;
-            width: 70%;
-            height: 120px;
+            top: 0; left: 15%; width: 70%; height: 120px;
             border: 8px solid var(--line-color);
             border-bottom: none;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        /* Elementos Animados */
+        /* Personagens Animados */
         #goalkeeper {
             position: absolute;
-            top: 60px;
-            left: 50%;
+            top: 60px; left: 50%;
             transform: translateX(-50%);
-            font-size: 4rem;
-            transition: all 0.4s ease-out;
+            font-size: 3.5rem;
+            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
             z-index: 20;
         }
 
         #ball {
             position: absolute;
-            bottom: 40px;
-            left: 50%;
+            bottom: 90px; left: 50%;
             transform: translateX(-50%);
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             transition: all 0.4s ease-out;
             z-index: 30;
         }
 
+        #kicker {
+            position: absolute;
+            bottom: 20px; left: 50%;
+            transform: translateX(-50%);
+            font-size: 4rem;
+            transition: all 0.3s;
+            z-index: 40;
+        }
+
         /* Controles */
+        #controls-container {
+            background: rgba(0,0,0,0.9);
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .hint-text {
+            color: #bdc3c7;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+        }
+
         #controls {
             display: flex;
             justify-content: space-around;
-            padding: 20px;
-            background: rgba(0,0,0,0.7);
-            z-index: 10;
         }
 
         .dir-btn {
-            background-color: #3498db;
-            font-size: 1.5rem;
+            background-color: #34495e;
+            font-size: 1.2rem;
             width: 30%;
+            box-shadow: none;
+            border: 2px solid #2c3e50;
         }
-        .dir-btn:disabled {
-            background-color: #7f8c8d;
-            cursor: not-allowed;
-        }
+        .dir-btn:disabled { background-color: #7f8c8d; cursor: not-allowed; opacity: 0.5; }
 
-        /* Overlay de Mensagens (Contagem, Gol/Defesa) */
+        /* Overlay de Mensagens */
         #message-overlay {
             position: absolute;
-            top: 40%;
-            left: 50%;
+            top: 40%; left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 4rem;
+            font-size: 3rem;
             font-weight: bold;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+            text-shadow: 2px 2px 15px rgba(0,0,0,1);
             z-index: 50;
             pointer-events: none;
             opacity: 0;
             transition: opacity 0.2s;
+            text-align: center;
+            width: 100%;
+        }
+
+        .sub-message {
+            font-size: 1.2rem;
+            display: block;
+            margin-top: 10px;
+            font-weight: normal;
         }
 
         /* Resumo Final */
         .stats-box {
             background: rgba(255,255,255,0.1);
-            padding: 15px;
+            padding: 20px;
             border-radius: 8px;
             margin-bottom: 20px;
             text-align: left;
             width: 100%;
-        }
-        .insight {
-            color: #f1c40f;
-            font-weight: bold;
-            font-size: 1.1rem;
+            border-left: 4px solid var(--accent-color);
         }
     </style>
 </head>
@@ -182,55 +206,60 @@
 
 <div id="game-container">
     
+    <!-- Tela Inicial -->
     <div id="start-screen" class="screen">
-        <h1>⚽ PÊNALTI</h1>
-        <h2>O Goleiro está aprendendo</h2>
-        <p>Você tem 10 cobranças. Escolha o canto para chutar.</p>
-        <p>Parece fácil, mas cuidado... suas escolhas deixam rastros.</p>
-        <button onclick="startGame()">Começar Jogo</button>
+        <h1>DESAFIE O SISTEMA</h1>
+        <h2>Você tem o controle?</h2>
+        <p>Você terá 10 cobranças de pênalti.</p>
+        <p>Tente usar sua intuição e estratégia para enganar o goleiro virtual.</p>
+        <p style="font-size: 0.9rem; color: #aaa; margin-top: 20px;">Parece um jogo de sorte, mas preste atenção aos detalhes...</p>
+        <button onclick="startGame()">Começar o Desafio</button>
     </div>
 
+    <!-- Tela de Fim de Jogo -->
     <div id="end-screen" class="screen hidden">
-        <h2 style="color: #e74c3c;">⚠️ O GOLEIRO ESTAVA APRENDENDO!</h2>
+        <h1 style="color: var(--danger-color); font-size: 1.8rem;">A ILUSÃO DO CONTROLE</h1>
         
         <div class="stats-box" id="final-stats">
-            </div>
+            <!-- Preenchido via JS -->
+        </div>
 
-        <p class="insight">🧠 Quanto mais você repetia um padrão, mais fácil era prever sua próxima decisão.</p>
-        <p style="font-size: 0.9rem;">Em plataformas digitais, nossas escolhas também geram dados que ajudam sistemas a personalizar o que vemos e prever nossos comportamentos.</p>
+        <p>Você achou que estava criando uma estratégia, mas <strong>o sistema estava lendo seus padrões.</strong></p>
+        <p style="font-size: 0.9rem; color: #ccc;">Plataformas digitais e jogos de azar funcionam assim: o primeiro ganho é uma isca (dopamina). Depois, algoritmos usam seus próprios dados para antecipar seus movimentos e garantir que a máquina sempre vença.</p>
         
         <button onclick="resetGame()">Jogar Novamente</button>
     </div>
 
+    <!-- Interface do Jogo -->
     <div id="scoreboard">
-        <span>Gols: <span id="score-player">0</span></span>
+        <span>Seus Gols: <span id="score-player" class="score-player">0</span></span>
         <span>Rodada: <span id="round-counter">1</span>/10</span>
-        <span>Defesas: <span id="score-gk">0</span></span>
+        <span>Máquina: <span id="score-machine" class="score-machine">0</span></span>
     </div>
 
     <div id="field">
         <div class="goal-post"></div>
-        <div id="goalkeeper">🧤</div>
+        <div id="goalkeeper">🤖</div>
         <div id="ball">⚽</div>
+        <div id="kicker">🧍</div>
         <div id="message-overlay"></div>
     </div>
 
-    <div id="controls">
-        <button class="dir-btn" id="btn-left" onclick="shoot('L')">⬅️ Esq</button>
-        <button class="dir-btn" id="btn-center" onclick="shoot('C')">⬆️ Meio</button>
-        <button class="dir-btn" id="btn-right" onclick="shoot('R')">➡️ Dir</button>
+    <div id="controls-container">
+        <div class="hint-text">Crie sua estratégia. Escolha o canto:</div>
+        <div id="controls">
+            <button class="dir-btn" id="btn-left" onclick="shoot('L')">⬅️ Esq</button>
+            <button class="dir-btn" id="btn-center" onclick="shoot('C')">⬆️ Meio</button>
+            <button class="dir-btn" id="btn-right" onclick="shoot('R')">➡️ Dir</button>
+        </div>
     </div>
 </div>
 
 <script>
-    // --- SISTEMA DE ÁUDIO (Web Audio API) ---
-    // Gera sons sem precisar de arquivos externos
+    // --- ÁUDIO (Web Audio API) ---
     let audioCtx;
-    
     function initAudio() {
-        if (!audioCtx) {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        }
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
     function playSound(type) {
@@ -239,81 +268,67 @@
         const gain = audioCtx.createGain();
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-
         const now = audioCtx.currentTime;
 
         if (type === 'whistle') {
             osc.type = 'sine';
             osc.frequency.setValueAtTime(800, now);
-            osc.frequency.linearRampToValueAtTime(1200, now + 0.1);
-            osc.frequency.linearRampToValueAtTime(1200, now + 0.4);
+            osc.frequency.linearRampToValueAtTime(1200, now + 0.3);
             gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-            osc.start(now);
-            osc.stop(now + 0.5);
-        } else if (type === 'tick') {
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(400, now);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-            osc.start(now);
-            osc.stop(now + 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+            osc.start(now); osc.stop(now + 0.3);
         } else if (type === 'kick') {
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(150, now);
             osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
             gain.gain.setValueAtTime(0.3, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-            osc.start(now);
-            osc.stop(now + 0.2);
+            osc.start(now); osc.stop(now + 0.2);
         } else if (type === 'goal') {
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(400, now);
-            osc.frequency.linearRampToValueAtTime(600, now + 0.1);
-            osc.frequency.linearRampToValueAtTime(800, now + 0.2);
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.linearRampToValueAtTime(900, now + 0.1);
             gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0, now + 1);
-            osc.start(now);
-            osc.stop(now + 1);
+            gain.gain.linearRampToValueAtTime(0, now + 0.5);
+            osc.start(now); osc.stop(now + 0.5);
         } else if (type === 'save') {
             osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(300, now);
-            osc.frequency.exponentialRampToValueAtTime(100, now + 0.5);
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.exponentialRampToValueAtTime(50, now + 0.4);
             gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.6);
-            osc.start(now);
-            osc.stop(now + 0.6);
+            gain.gain.linearRampToValueAtTime(0, now + 0.5);
+            osc.start(now); osc.stop(now + 0.5);
         }
     }
 
-    // --- LÓGICA DO JOGO ---
+    // --- LÓGICA DO JOGO & ALGORITMO PREDITIVO ---
     const TOTAL_ROUNDS = 10;
-    let currentRound = 1;
-    let playerScore = 0;
-    let gkScore = 0;
     
-    // O "Cérebro" do goleiro: armazena as escolhas do jogador
-    let playerHistory = { 'L': 0, 'C': 0, 'R': 0 };
+    let currentRound = 1;
+    let playerGoals = 0;
+    let machineSaves = 0;
+    let playerHistory = []; // Armazena a sequência de chutes
 
     const ball = document.getElementById('ball');
     const gk = document.getElementById('goalkeeper');
+    const kicker = document.getElementById('kicker');
     const msgOverlay = document.getElementById('message-overlay');
     const buttons = document.querySelectorAll('.dir-btn');
-
-    // Função auxiliar para pausas (await sleep)
+    
     const sleep = ms => new Promise(r => setTimeout(r, ms));
 
     function startGame() {
         initAudio();
         document.getElementById('start-screen').classList.add('hidden');
         resetPositions();
+        updateScoreboard();
     }
 
     function resetGame() {
         currentRound = 1;
-        playerScore = 0;
-        gkScore = 0;
-        playerHistory = { 'L': 0, 'C': 0, 'R': 0 };
+        playerGoals = 0;
+        machineSaves = 0;
+        playerHistory = [];
         updateScoreboard();
         document.getElementById('end-screen').classList.add('hidden');
         resetPositions();
@@ -323,93 +338,120 @@
         buttons.forEach(btn => btn.disabled = disabled);
     }
 
-    function showMessage(text, color = '#fff') {
-        msgOverlay.textContent = text;
+    function showMessage(mainText, subText, color) {
+        msgOverlay.innerHTML = `${mainText} <br><span class="sub-message" style="color:${color}">${subText}</span>`;
         msgOverlay.style.color = color;
         msgOverlay.style.opacity = 1;
     }
 
-    function hideMessage() {
-        msgOverlay.style.opacity = 0;
-    }
-
-    // Lógica do Algoritmo Adaptativo
-    function getGkChoice() {
-        const totalShots = playerHistory['L'] + playerHistory['C'] + playerHistory['R'];
-        
-        // Primeiras 3 rodadas: Goleiro age de forma aleatória
-        if (totalShots < 3) {
+    // O CÉREBRO DA MÁQUINA (Cadeia de Markov Simples)
+    function predictNextMove() {
+        if (playerHistory.length < 2) {
             const choices = ['L', 'C', 'R'];
             return choices[Math.floor(Math.random() * choices.length)];
-        } 
-        
-        // A partir da 4ª rodada: Goleiro usa os dados (probabilidade ponderada)
-        // Se o jogador chutou 7 vezes na Esquerda e 3 na Direita, o goleiro terá 70% de chance de pular na Esquerda.
-        let random = Math.random() * totalShots;
-        
-        if (random < playerHistory['L']) return 'L';
-        if (random < playerHistory['L'] + playerHistory['C']) return 'C';
-        return 'R';
+        }
+
+        // Pega a última jogada do usuário para prever a próxima
+        let lastMove = playerHistory[playerHistory.length - 1];
+        let nextMoveCounts = { 'L': 0, 'C': 0, 'R': 0 };
+
+        // Procura padrões de sequência no histórico
+        for (let i = 0; i < playerHistory.length - 1; i++) {
+            if (playerHistory[i] === lastMove) {
+                let moveAfter = playerHistory[i + 1];
+                nextMoveCounts[moveAfter]++;
+            }
+        }
+
+        // Escolhe a direção que o jogador mais repete após a última jogada
+        let predictedMove = 'C';
+        let maxCount = -1;
+        for (const [dir, count] of Object.entries(nextMoveCounts)) {
+            if (count > maxCount) {
+                maxCount = count;
+                predictedMove = dir;
+            }
+        }
+
+        // Se não houver padrão claro, usa a jogada mais frequente no geral
+        if (maxCount === 0) {
+            let totalCounts = { 'L': 0, 'C': 0, 'R': 0 };
+            playerHistory.forEach(move => totalCounts[move]++);
+            predictedMove = Object.keys(totalCounts).reduce((a, b) => totalCounts[a] > totalCounts[b] ? a : b);
+        }
+
+        return predictedMove;
     }
 
     async function shoot(playerChoice) {
         setButtonsState(true);
         initAudio();
 
-        // 1. Pre-chute (Apito e Suspense)
         playSound('whistle');
-        await sleep(600);
-
-        for (let i = 3; i > 0; i--) {
-            showMessage(i);
-            playSound('tick');
-            await sleep(700);
-        }
-        hideMessage();
-
-        // 2. O Chute
-        playSound('kick');
         
-        // Define o movimento da bola
-        let ballX, ballY = "-300px";
-        if (playerChoice === 'L') ballX = "calc(-50% - 90px)";
+        // Movimento do Batedor
+        kicker.style.transform = "translate(-50%, -30px) scale(1.1)";
+        await sleep(300);
+        
+        playSound('kick');
+        kicker.style.transform = "translate(-50%, 0) scale(1)";
+
+        // Decisão do Algoritmo
+        let gkChoice;
+        if (currentRound === 1) {
+            // A ISCA: Na rodada 1, o sistema "erra" de propósito.
+            gkChoice = playerChoice === 'L' ? 'R' : 'L';
+        } else {
+            // O BOTE: A partir da rodada 2, prevê o jogador.
+            gkChoice = predictNextMove();
+            
+            // "Vantagem do Sistema": O jogo rouba a favor da máquina em 20% das vezes 
+            // se o algoritmo ainda estiver confuso.
+            if (Math.random() > 0.80) {
+                 gkChoice = playerChoice; 
+            }
+        }
+
+        // Define posições visuais
+        let ballX, ballY = "-320px";
+        if (playerChoice === 'L') ballX = "calc(-50% - 100px)";
         else if (playerChoice === 'C') ballX = "-50%";
-        else if (playerChoice === 'R') ballX = "calc(-50% + 90px)";
+        else if (playerChoice === 'R') ballX = "calc(-50% + 100px)";
 
-        // Goleiro "pensa" e age
-        const gkChoice = getGkChoice();
         let gkX;
-        if (gkChoice === 'L') gkX = "calc(-50% - 90px)";
+        if (gkChoice === 'L') gkX = "calc(-50% - 100px)";
         else if (gkChoice === 'C') gkX = "-50%";
-        else if (gkChoice === 'R') gkX = "calc(-50% + 90px)";
+        else if (gkChoice === 'R') gkX = "calc(-50% + 100px)";
 
-        // Animação
-        ball.style.transform = `translate(${ballX}, ${ballY}) scale(0.6)`;
+        // Executa animações
+        ball.style.transform = `translate(${ballX}, ${ballY}) scale(0.6) rotate(360deg)`;
         gk.style.transform = `translateX(${gkX})`;
         
-        // Registra o dado para a próxima rodada (O APRENDIZADO)
-        playerHistory[playerChoice]++;
+        // Salva a jogada para aprendizado futuro
+        playerHistory.push(playerChoice);
 
-        await sleep(400); // Tempo da bola chegar no gol
+        await sleep(500);
 
-        // 3. Resultado
+        // Resultado da Rodada
         if (playerChoice === gkChoice) {
-            // Defendeu
-            gkScore++;
             playSound('save');
-            showMessage("🧤 DEFENDEU!", "#e74c3c");
+            machineSaves++;
+            showMessage("DEFENDEU!", "A máquina previu seu movimento.", "#e74c3c");
         } else {
-            // Gol
-            playerScore++;
             playSound('goal');
-            showMessage("⚽ GOOOOL!", "#2ecc71");
+            playerGoals++;
+            if (currentRound === 1) {
+                showMessage("GOL!", "Foi sorte ou habilidade?", "#2ecc71");
+            } else {
+                showMessage("GOL!", "", "#2ecc71");
+            }
         }
 
         updateScoreboard();
-        await sleep(2000);
-        hideMessage();
+        await sleep(2200);
+        msgOverlay.style.opacity = 0;
 
-        // 4. Próxima rodada ou Fim
+        // Avança rodada ou finaliza
         if (currentRound < TOTAL_ROUNDS) {
             currentRound++;
             updateScoreboard();
@@ -421,24 +463,32 @@
     }
 
     function resetPositions() {
-        ball.style.transform = "translateX(-50%)";
+        ball.style.transform = "translateX(-50%) rotate(0deg)";
         gk.style.transform = "translateX(-50%)";
+        kicker.style.transform = "translateX(-50%)";
     }
 
     function updateScoreboard() {
-        document.getElementById('score-player').textContent = playerScore;
-        document.getElementById('score-gk').textContent = gkScore;
+        document.getElementById('score-player').textContent = playerGoals;
+        document.getElementById('score-machine').textContent = machineSaves;
         document.getElementById('round-counter').textContent = Math.min(currentRound, TOTAL_ROUNDS);
     }
 
     function showEndScreen() {
         const statsDiv = document.getElementById('final-stats');
+        
+        // Traduz as letras para exibição
+        const translate = { 'L': 'Esq', 'C': 'Meio', 'R': 'Dir' };
+        const historyText = playerHistory.map(h => translate[h]).join(' ➔ ');
+        
         statsDiv.innerHTML = `
-            <p><strong>SEUS CHUTES (SEUS DADOS):</strong></p>
-            <p>⬅️ Esquerda: ${playerHistory['L']} vezes</p>
-            <p>⬆️ Meio: ${playerHistory['C']} vezes</p>
-            <p>➡️ Direita: ${playerHistory['R']} vezes</p>
+            <p><strong>SUA SEQUÊNCIA DE CHUTES:</strong></p>
+            <p style="letter-spacing: 1px; font-size: 0.9rem; color: #f1c40f;">${historyText}</p>
+            <hr style="border-color: #555; margin: 15px 0;">
+            <p>Seus Gols: <strong style="color: var(--success-color);">${playerGoals}</strong></p>
+            <p>Defesas da Máquina: <strong style="color: var(--danger-color);">${machineSaves}</strong></p>
         `;
+        
         document.getElementById('end-screen').classList.remove('hidden');
         setButtonsState(false);
     }
