@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pênalti: O Goleiro Inteligente</title>
+    <style>
+        :root {
+            --grass-color: #2e8b57;
+            --line-color: #ffffff;
+            --text-color: #333;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #1a1a1a;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 500px;
+            height: 100vh;
+            max-height: 800px;
+            background-color: var(--grass-color);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            border-left: 2px solid var(--line-color);
+            border-right: 2px solid var(--line-color);
+        }
+
+        /* Telas */
+        .screen {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 100;
+            padding: 20px;
+            text-align: center;
+            transition: opacity 0.3s;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+
+        h1, h2, h3 { margin-bottom: 15px; }
+        p { margin-bottom: 20px; line-height: 1.5; }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #fff;
+            background-color: #e67e22;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
+        }
+        button:active { transform: scale(0.95); }
+
+        /* Campo de Jogo */
+        #scoreboard {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: rgba(0,0,0,0.5);
+            font-size: 1.2rem;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        #field {
+            flex: 1;
+            position: relative;
+            border-top: 5px solid var(--line-color);
+            margin-top: 40px;
+        }
+
+        /* Trave */
+        .goal-post {
+            position: absolute;
+            top: 0;
+            left: 15%;
+            width: 70%;
+            height: 120px;
+            border: 8px solid var(--line-color);
+            border-bottom: none;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Elementos Animados */
+        #goalkeeper {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 4rem;
+            transition: all 0.4s ease-out;
+            z-index: 20;
+        }
+
+        #ball {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2.5rem;
+            transition: all 0.4s ease-out;
+            z-index: 30;
+        }
+
+        /* Controles */
+        #controls {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+            background: rgba(0,0,0,0.7);
+            z-index: 10;
+        }
+
+        .dir-btn {
+            background-color: #3498db;
+            font-size: 1.5rem;
+            width: 30%;
+        }
+        .dir-btn:disabled {
+            background-color: #7f8c8d;
+            cursor: not-allowed;
+        }
+
+        /* Overlay de Mensagens (Contagem, Gol/Defesa) */
+        #message-overlay {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.8);
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        /* Resumo Final */
+        .stats-box {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+            width: 100%;
+        }
+        .insight {
+            color: #f1c40f;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    
+    <div id="start-screen" class="screen">
+        <h1>⚽ PÊNALTI</h1>
+        <h2>O Goleiro está aprendendo</h2>
+        <p>Você tem 10 cobranças. Escolha o canto para chutar.</p>
+        <p>Parece fácil, mas cuidado... suas escolhas deixam rastros.</p>
+        <button onclick="startGame()">Começar Jogo</button>
+    </div>
+
+    <div id="end-screen" class="screen hidden">
+        <h2 style="color: #e74c3c;">⚠️ O GOLEIRO ESTAVA APRENDENDO!</h2>
+        
+        <div class="stats-box" id="final-stats">
+            </div>
+
+        <p class="insight">🧠 Quanto mais você repetia um padrão, mais fácil era prever sua próxima decisão.</p>
+        <p style="font-size: 0.9rem;">Em plataformas digitais, nossas escolhas também geram dados que ajudam sistemas a personalizar o que vemos e prever nossos comportamentos.</p>
+        
+        <button onclick="resetGame()">Jogar Novamente</button>
+    </div>
+
+    <div id="scoreboard">
+        <span>Gols: <span id="score-player">0</span></span>
+        <span>Rodada: <span id="round-counter">1</span>/10</span>
+        <span>Defesas: <span id="score-gk">0</span></span>
+    </div>
+
+    <div id="field">
+        <div class="goal-post"></div>
+        <div id="goalkeeper">🧤</div>
+        <div id="ball">⚽</div>
+        <div id="message-overlay"></div>
+    </div>
+
+    <div id="controls">
+        <button class="dir-btn" id="btn-left" onclick="shoot('L')">⬅️ Esq</button>
+        <button class="dir-btn" id="btn-center" onclick="shoot('C')">⬆️ Meio</button>
+        <button class="dir-btn" id="btn-right" onclick="shoot('R')">➡️ Dir</button>
+    </div>
+</div>
+
+<script>
+    // --- SISTEMA DE ÁUDIO (Web Audio API) ---
+    // Gera sons sem precisar de arquivos externos
+    let audioCtx;
+    
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+    }
+
+    function playSound(type) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'whistle') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.linearRampToValueAtTime(1200, now + 0.1);
+            osc.frequency.linearRampToValueAtTime(1200, now + 0.4);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.start(now);
+            osc.stop(now + 0.5);
+        } else if (type === 'tick') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(400, now);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'kick') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+        } else if (type === 'goal') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.linearRampToValueAtTime(600, now + 0.1);
+            osc.frequency.linearRampToValueAtTime(800, now + 0.2);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0, now + 1);
+            osc.start(now);
+            osc.stop(now + 1);
+        } else if (type === 'save') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 0.5);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.6);
+            osc.start(now);
+            osc.stop(now + 0.6);
+        }
+    }
+
+    // --- LÓGICA DO JOGO ---
+    const TOTAL_ROUNDS = 10;
+    let currentRound = 1;
+    let playerScore = 0;
+    let gkScore = 0;
+    
+    // O "Cérebro" do goleiro: armazena as escolhas do jogador
+    let playerHistory = { 'L': 0, 'C': 0, 'R': 0 };
+
+    const ball = document.getElementById('ball');
+    const gk = document.getElementById('goalkeeper');
+    const msgOverlay = document.getElementById('message-overlay');
+    const buttons = document.querySelectorAll('.dir-btn');
+
+    // Função auxiliar para pausas (await sleep)
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+    function startGame() {
+        initAudio();
+        document.getElementById('start-screen').classList.add('hidden');
+        resetPositions();
+    }
+
+    function resetGame() {
+        currentRound = 1;
+        playerScore = 0;
+        gkScore = 0;
+        playerHistory = { 'L': 0, 'C': 0, 'R': 0 };
+        updateScoreboard();
+        document.getElementById('end-screen').classList.add('hidden');
+        resetPositions();
+    }
+
+    function setButtonsState(disabled) {
+        buttons.forEach(btn => btn.disabled = disabled);
+    }
+
+    function showMessage(text, color = '#fff') {
+        msgOverlay.textContent = text;
+        msgOverlay.style.color = color;
+        msgOverlay.style.opacity = 1;
+    }
+
+    function hideMessage() {
+        msgOverlay.style.opacity = 0;
+    }
+
+    // Lógica do Algoritmo Adaptativo
+    function getGkChoice() {
+        const totalShots = playerHistory['L'] + playerHistory['C'] + playerHistory['R'];
+        
+        // Primeiras 3 rodadas: Goleiro age de forma aleatória
+        if (totalShots < 3) {
+            const choices = ['L', 'C', 'R'];
+            return choices[Math.floor(Math.random() * choices.length)];
+        } 
+        
+        // A partir da 4ª rodada: Goleiro usa os dados (probabilidade ponderada)
+        // Se o jogador chutou 7 vezes na Esquerda e 3 na Direita, o goleiro terá 70% de chance de pular na Esquerda.
+        let random = Math.random() * totalShots;
+        
+        if (random < playerHistory['L']) return 'L';
+        if (random < playerHistory['L'] + playerHistory['C']) return 'C';
+        return 'R';
+    }
+
+    async function shoot(playerChoice) {
+        setButtonsState(true);
+        initAudio();
+
+        // 1. Pre-chute (Apito e Suspense)
+        playSound('whistle');
+        await sleep(600);
+
+        for (let i = 3; i > 0; i--) {
+            showMessage(i);
+            playSound('tick');
+            await sleep(700);
+        }
+        hideMessage();
+
+        // 2. O Chute
+        playSound('kick');
+        
+        // Define o movimento da bola
+        let ballX, ballY = "-300px";
+        if (playerChoice === 'L') ballX = "calc(-50% - 90px)";
+        else if (playerChoice === 'C') ballX = "-50%";
+        else if (playerChoice === 'R') ballX = "calc(-50% + 90px)";
+
+        // Goleiro "pensa" e age
+        const gkChoice = getGkChoice();
+        let gkX;
+        if (gkChoice === 'L') gkX = "calc(-50% - 90px)";
+        else if (gkChoice === 'C') gkX = "-50%";
+        else if (gkChoice === 'R') gkX = "calc(-50% + 90px)";
+
+        // Animação
+        ball.style.transform = `translate(${ballX}, ${ballY}) scale(0.6)`;
+        gk.style.transform = `translateX(${gkX})`;
+        
+        // Registra o dado para a próxima rodada (O APRENDIZADO)
+        playerHistory[playerChoice]++;
+
+        await sleep(400); // Tempo da bola chegar no gol
+
+        // 3. Resultado
+        if (playerChoice === gkChoice) {
+            // Defendeu
+            gkScore++;
+            playSound('save');
+            showMessage("🧤 DEFENDEU!", "#e74c3c");
+        } else {
+            // Gol
+            playerScore++;
+            playSound('goal');
+            showMessage("⚽ GOOOOL!", "#2ecc71");
+        }
+
+        updateScoreboard();
+        await sleep(2000);
+        hideMessage();
+
+        // 4. Próxima rodada ou Fim
+        if (currentRound < TOTAL_ROUNDS) {
+            currentRound++;
+            updateScoreboard();
+            resetPositions();
+            setButtonsState(false);
+        } else {
+            showEndScreen();
+        }
+    }
+
+    function resetPositions() {
+        ball.style.transform = "translateX(-50%)";
+        gk.style.transform = "translateX(-50%)";
+    }
+
+    function updateScoreboard() {
+        document.getElementById('score-player').textContent = playerScore;
+        document.getElementById('score-gk').textContent = gkScore;
+        document.getElementById('round-counter').textContent = Math.min(currentRound, TOTAL_ROUNDS);
+    }
+
+    function showEndScreen() {
+        const statsDiv = document.getElementById('final-stats');
+        statsDiv.innerHTML = `
+            <p><strong>SEUS CHUTES (SEUS DADOS):</strong></p>
+            <p>⬅️ Esquerda: ${playerHistory['L']} vezes</p>
+            <p>⬆️ Meio: ${playerHistory['C']} vezes</p>
+            <p>➡️ Direita: ${playerHistory['R']} vezes</p>
+        `;
+        document.getElementById('end-screen').classList.remove('hidden');
+        setButtonsState(false);
+    }
+</script>
+
+</body>
+</html>
