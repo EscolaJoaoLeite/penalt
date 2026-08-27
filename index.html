@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>O Sistema: O Jogo Impossível</title>
+    <title>Pênalti: A Ilusão do Controle</title>
     <style>
         :root {
             --grass-color: #1a472a;
             --line-color: #ffffff;
-            --accent-color: #9b59b6; /* Cor mais tecnológica/psicológica */
+            --accent-color: #3498db;
             --danger-color: #e74c3c;
             --success-color: #2ecc71;
         }
@@ -41,7 +41,7 @@
             flex-direction: column;
             border-left: 2px solid var(--line-color);
             border-right: 2px solid var(--line-color);
-            box-shadow: 0 0 30px rgba(155, 89, 182, 0.2);
+            box-shadow: 0 0 30px rgba(52, 152, 219, 0.2);
         }
 
         /* Telas de UI */
@@ -64,22 +64,25 @@
         h1 { color: var(--accent-color); font-size: 2.2rem; margin-bottom: 10px; }
         h2 { margin-bottom: 15px; font-size: 1.3rem; font-weight: normal; }
         p { margin-bottom: 15px; line-height: 1.6; font-size: 1.1rem; }
-        .highlight { color: var(--accent-color); font-weight: bold; }
 
-        button {
-            padding: 15px 30px;
-            font-size: 1.2rem;
+        .btn-mode {
+            padding: 15px 20px;
+            font-size: 1.1rem;
             font-weight: bold;
             color: #fff;
-            background-color: var(--accent-color);
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);
-            transition: transform 0.1s, background 0.3s;
-            margin-top: 10px;
+            transition: transform 0.1s, opacity 0.3s;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 300px;
         }
-        button:active { transform: scale(0.95); }
+        .btn-mode:active { transform: scale(0.95); }
+        
+        .btn-modo1 { background-color: #9b59b6; box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4); }
+        .btn-modo2 { background-color: #e74c3c; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4); }
+        .btn-reset { background-color: var(--accent-color); padding: 15px 30px; margin-top: 20px; }
 
         /* Placar */
         #scoreboard {
@@ -104,12 +107,21 @@
             margin-top: 30px;
         }
 
+        /* O Gol (Travessão e Redes) */
         .goal-post {
             position: absolute;
-            top: 0; left: 15%; width: 70%; height: 120px;
+            top: 20px; 
+            left: 15%; 
+            width: 70%; 
+            height: 140px;
             border: 8px solid var(--line-color);
             border-bottom: none;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.1);
+            background-image: 
+                linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%, rgba(255,255,255,0.2)), 
+                linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%, rgba(255,255,255,0.2));
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
         }
 
         /* Personagens Animados */
@@ -117,7 +129,7 @@
             position: absolute;
             top: 60px; left: 50%;
             transform: translateX(-50%);
-            font-size: 3.5rem;
+            font-size: 4rem;
             transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
             z-index: 20;
         }
@@ -146,12 +158,6 @@
             padding: 15px;
             text-align: center;
         }
-        
-        .hint-text {
-            color: #bdc3c7;
-            font-size: 0.95rem;
-            margin-bottom: 15px;
-        }
 
         #controls {
             display: flex;
@@ -162,8 +168,11 @@
             background-color: #34495e;
             font-size: 1.2rem;
             width: 30%;
-            box-shadow: none;
+            padding: 15px 0;
+            color: #fff;
             border: 2px solid #2c3e50;
+            border-radius: 8px;
+            cursor: pointer;
         }
         .dir-btn:disabled { background-color: #7f8c8d; cursor: not-allowed; opacity: 0.5; }
 
@@ -183,13 +192,6 @@
             width: 100%;
         }
 
-        .sub-message {
-            font-size: 1.2rem;
-            display: block;
-            margin-top: 10px;
-            font-weight: normal;
-        }
-
         /* Resumo Final */
         .stats-box {
             background: rgba(255,255,255,0.1);
@@ -200,6 +202,8 @@
             width: 100%;
             border-left: 4px solid var(--accent-color);
         }
+        
+        .moral-text { font-size: 1rem; color: #ccc; text-align: left; }
     </style>
 </head>
 <body>
@@ -209,44 +213,46 @@
     <!-- Tela Inicial -->
     <div id="start-screen" class="screen">
         <h1>DESAFIE O SISTEMA</h1>
-        <h2>Você tem o controle?</h2>
-        <p>Você terá 10 cobranças de pênalti.</p>
-        <p>Tente usar sua intuição e estratégia para enganar o goleiro virtual.</p>
-        <p style="font-size: 0.9rem; color: #aaa; margin-top: 20px;">Parece um jogo de sorte, mas preste atenção aos detalhes...</p>
-        <button onclick="startGame()">Começar o Desafio</button>
+        <h2>Escolha seu modo de jogo</h2>
+        <p style="font-size: 0.9rem; color: #aaa;">Você terá 10 cobranças em cada modo.</p>
+        
+        <button class="btn-mode btn-modo1" onclick="startGame(1)">
+            MODO 1: Goleiro Adaptativo<br>
+            <span style="font-size: 0.8rem; font-weight: normal;">Ele aprende com seus padrões</span>
+        </button>
+        
+        <button class="btn-mode btn-modo2" onclick="startGame(2)">
+            MODO 2: Manipulação Total<br>
+            <span style="font-size: 0.8rem; font-weight: normal;">O sistema é quem manda</span>
+        </button>
     </div>
 
     <!-- Tela de Fim de Jogo -->
     <div id="end-screen" class="screen hidden">
-        <h1 style="color: var(--danger-color); font-size: 1.8rem;">A ILUSÃO DO CONTROLE</h1>
+        <h1 id="end-title" style="color: var(--danger-color); font-size: 1.8rem;">A ILUSÃO DO CONTROLE</h1>
         
-        <div class="stats-box" id="final-stats">
-            <!-- Preenchido via JS -->
-        </div>
-
-        <p>Você achou que estava criando uma estratégia, mas <strong>o sistema estava lendo seus padrões.</strong></p>
-        <p style="font-size: 0.9rem; color: #ccc;">Plataformas digitais e jogos de azar funcionam assim: o primeiro ganho é uma isca (dopamina). Depois, algoritmos usam seus próprios dados para antecipar seus movimentos e garantir que a máquina sempre vença.</p>
+        <div class="stats-box" id="final-stats"></div>
+        <div class="moral-text" id="moral-message"></div>
         
-        <button onclick="resetGame()">Jogar Novamente</button>
+        <button class="btn-mode btn-reset" onclick="resetGame()">Voltar ao Início</button>
     </div>
 
     <!-- Interface do Jogo -->
     <div id="scoreboard">
-        <span>Seus Gols: <span id="score-player" class="score-player">0</span></span>
+        <span>Gols: <span id="score-player" class="score-player">0</span></span>
         <span>Rodada: <span id="round-counter">1</span>/10</span>
-        <span>Máquina: <span id="score-machine" class="score-machine">0</span></span>
+        <span>Defesas: <span id="score-machine" class="score-machine">0</span></span>
     </div>
 
     <div id="field">
         <div class="goal-post"></div>
-        <div id="goalkeeper">🤖</div>
+        <div id="goalkeeper">🧤</div>
         <div id="ball">⚽</div>
         <div id="kicker">🧍</div>
         <div id="message-overlay"></div>
     </div>
 
     <div id="controls-container">
-        <div class="hint-text">Crie sua estratégia. Escolha o canto:</div>
         <div id="controls">
             <button class="dir-btn" id="btn-left" onclick="shoot('L')">⬅️ Esq</button>
             <button class="dir-btn" id="btn-center" onclick="shoot('C')">⬆️ Meio</button>
@@ -256,19 +262,93 @@
 </div>
 
 <script>
-    // --- ÁUDIO (Web Audio API) ---
+    // --- ÁUDIO (Web Audio API Avançada para Torcida) ---
     let audioCtx;
     function initAudio() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
 
+    function createNoiseBuffer() {
+        const bufferSize = audioCtx.sampleRate * 2; // 2 segundos
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+        return buffer;
+    }
+
+    function playCrowdSound(type) {
+        if (!audioCtx) return;
+        const now = audioCtx.currentTime;
+        
+        // Gerador de ruído branco (simula a multidão)
+        const noiseSrc = audioCtx.createBufferSource();
+        noiseSrc.buffer = createNoiseBuffer();
+        
+        const noiseFilter = audioCtx.createBiquadFilter();
+        const noiseGain = audioCtx.createGain();
+        
+        noiseSrc.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(audioCtx.destination);
+
+        if (type === 'cheer') {
+            // Torcida Vibrando (Gol) - Frequências mais altas e abertura de filtro
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.setValueAtTime(500, now);
+            noiseFilter.frequency.linearRampToValueAtTime(1500, now + 0.5);
+            
+            noiseGain.gain.setValueAtTime(0, now);
+            noiseGain.gain.linearRampToValueAtTime(0.8, now + 0.2);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+            
+            // Adiciona um tom harmônico de comemoração
+            const osc = audioCtx.createOscillator();
+            const oscGain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.linearRampToValueAtTime(600, now + 0.5);
+            oscGain.gain.setValueAtTime(0, now);
+            oscGain.gain.linearRampToValueAtTime(0.3, now + 0.2);
+            oscGain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+            osc.connect(oscGain).connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 1.5);
+
+        } else if (type === 'boo') {
+            // Torcida Vaiando (Defesa) - Frequências baixas e ressonância
+            noiseFilter.type = 'lowpass';
+            noiseFilter.frequency.setValueAtTime(800, now);
+            noiseFilter.frequency.linearRampToValueAtTime(300, now + 1);
+            
+            noiseGain.gain.setValueAtTime(0, now);
+            noiseGain.gain.linearRampToValueAtTime(0.6, now + 0.3);
+            noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 2);
+
+            // Tom harmônico de frustração
+            const osc = audioCtx.createOscillator();
+            const oscGain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 1);
+            oscGain.gain.setValueAtTime(0, now);
+            oscGain.gain.linearRampToValueAtTime(0.2, now + 0.3);
+            oscGain.gain.exponentialRampToValueAtTime(0.01, now + 2);
+            osc.connect(oscGain).connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 2);
+        }
+        
+        noiseSrc.start(now);
+    }
+
     function playSound(type) {
         if (!audioCtx) return;
+        const now = audioCtx.currentTime;
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        const now = audioCtx.currentTime;
+        osc.connect(gain).connect(audioCtx.destination);
 
         if (type === 'whistle') {
             osc.type = 'sine';
@@ -284,30 +364,16 @@
             gain.gain.setValueAtTime(0.3, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
             osc.start(now); osc.stop(now + 0.2);
-        } else if (type === 'goal') {
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(600, now);
-            osc.frequency.linearRampToValueAtTime(900, now + 0.1);
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.5);
-            osc.start(now); osc.stop(now + 0.5);
-        } else if (type === 'save') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(200, now);
-            osc.frequency.exponentialRampToValueAtTime(50, now + 0.4);
-            gain.gain.setValueAtTime(0.2, now);
-            gain.gain.linearRampToValueAtTime(0, now + 0.5);
-            osc.start(now); osc.stop(now + 0.5);
         }
     }
 
-    // --- LÓGICA DO JOGO & ALGORITMO PREDITIVO ---
+    // --- LÓGICA DO JOGO ---
     const TOTAL_ROUNDS = 10;
-    
+    let mode = 1; // 1 = Aprendizado, 2 = Manipulado
     let currentRound = 1;
     let playerGoals = 0;
     let machineSaves = 0;
-    let playerHistory = []; // Armazena a sequência de chutes
+    let playerHistory = [];
 
     const ball = document.getElementById('ball');
     const gk = document.getElementById('goalkeeper');
@@ -317,7 +383,8 @@
     
     const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-    function startGame() {
+    function startGame(selectedMode) {
+        mode = selectedMode;
         initAudio();
         document.getElementById('start-screen').classList.add('hidden');
         resetPositions();
@@ -331,6 +398,7 @@
         playerHistory = [];
         updateScoreboard();
         document.getElementById('end-screen').classList.add('hidden');
+        document.getElementById('start-screen').classList.remove('hidden');
         resetPositions();
     }
 
@@ -338,32 +406,27 @@
         buttons.forEach(btn => btn.disabled = disabled);
     }
 
-    function showMessage(mainText, subText, color) {
-        msgOverlay.innerHTML = `${mainText} <br><span class="sub-message" style="color:${color}">${subText}</span>`;
+    function showMessage(text, color) {
+        msgOverlay.textContent = text;
         msgOverlay.style.color = color;
         msgOverlay.style.opacity = 1;
     }
 
-    // O CÉREBRO DA MÁQUINA (Cadeia de Markov Simples)
+    // Algoritmo do MODO 1
     function predictNextMove() {
         if (playerHistory.length < 2) {
             const choices = ['L', 'C', 'R'];
             return choices[Math.floor(Math.random() * choices.length)];
         }
-
-        // Pega a última jogada do usuário para prever a próxima
         let lastMove = playerHistory[playerHistory.length - 1];
         let nextMoveCounts = { 'L': 0, 'C': 0, 'R': 0 };
 
-        // Procura padrões de sequência no histórico
         for (let i = 0; i < playerHistory.length - 1; i++) {
             if (playerHistory[i] === lastMove) {
-                let moveAfter = playerHistory[i + 1];
-                nextMoveCounts[moveAfter]++;
+                nextMoveCounts[playerHistory[i + 1]]++;
             }
         }
-
-        // Escolhe a direção que o jogador mais repete após a última jogada
+        
         let predictedMove = 'C';
         let maxCount = -1;
         for (const [dir, count] of Object.entries(nextMoveCounts)) {
@@ -372,86 +435,75 @@
                 predictedMove = dir;
             }
         }
-
-        // Se não houver padrão claro, usa a jogada mais frequente no geral
         if (maxCount === 0) {
             let totalCounts = { 'L': 0, 'C': 0, 'R': 0 };
-            playerHistory.forEach(move => totalCounts[move]++);
+            playerHistory.forEach(m => totalCounts[m]++);
             predictedMove = Object.keys(totalCounts).reduce((a, b) => totalCounts[a] > totalCounts[b] ? a : b);
         }
-
         return predictedMove;
     }
 
     async function shoot(playerChoice) {
         setButtonsState(true);
         initAudio();
-
         playSound('whistle');
         
-        // Movimento do Batedor
         kicker.style.transform = "translate(-50%, -30px) scale(1.1)";
         await sleep(300);
         
         playSound('kick');
         kicker.style.transform = "translate(-50%, 0) scale(1)";
 
-        // Decisão do Algoritmo
+        // Decisão do Goleiro baseada no MODO
         let gkChoice;
-        if (currentRound === 1) {
-            // A ISCA: Na rodada 1, o sistema "erra" de propósito.
-            gkChoice = playerChoice === 'L' ? 'R' : 'L';
+        
+        if (mode === 2) {
+            // MODO 2: Totalmente Manipulado (Goleiro sempre defende)
+            gkChoice = playerChoice;
         } else {
-            // O BOTE: A partir da rodada 2, prevê o jogador.
-            gkChoice = predictNextMove();
-            
-            // "Vantagem do Sistema": O jogo rouba a favor da máquina em 20% das vezes 
-            // se o algoritmo ainda estiver confuso.
-            if (Math.random() > 0.80) {
-                 gkChoice = playerChoice; 
+            // MODO 1: Aprendizado
+            if (currentRound === 1) {
+                // Deixa o jogador ganhar a 1ª para dar confiança
+                gkChoice = playerChoice === 'L' ? 'R' : 'L';
+            } else {
+                gkChoice = predictNextMove();
+                // O sistema garante uma taxa alta de vitória para a máquina caso o humano seja imprevisível
+                if (Math.random() > 0.6) gkChoice = playerChoice; 
             }
         }
 
-        // Define posições visuais
-        let ballX, ballY = "-320px";
-        if (playerChoice === 'L') ballX = "calc(-50% - 100px)";
+        // Física ajustada para a bola entrar na rede (-220px)
+        let ballX, ballY = "-220px";
+        if (playerChoice === 'L') ballX = "calc(-50% - 110px)";
         else if (playerChoice === 'C') ballX = "-50%";
-        else if (playerChoice === 'R') ballX = "calc(-50% + 100px)";
+        else if (playerChoice === 'R') ballX = "calc(-50% + 110px)";
 
         let gkX;
-        if (gkChoice === 'L') gkX = "calc(-50% - 100px)";
+        if (gkChoice === 'L') gkX = "calc(-50% - 110px)";
         else if (gkChoice === 'C') gkX = "-50%";
-        else if (gkChoice === 'R') gkX = "calc(-50% + 100px)";
+        else if (gkChoice === 'R') gkX = "calc(-50% + 110px)";
 
-        // Executa animações
         ball.style.transform = `translate(${ballX}, ${ballY}) scale(0.6) rotate(360deg)`;
         gk.style.transform = `translateX(${gkX})`;
         
-        // Salva a jogada para aprendizado futuro
         playerHistory.push(playerChoice);
 
-        await sleep(500);
+        await sleep(400); // Tempo da bola até o gol
 
-        // Resultado da Rodada
         if (playerChoice === gkChoice) {
-            playSound('save');
             machineSaves++;
-            showMessage("DEFENDEU!", "A máquina previu seu movimento.", "#e74c3c");
+            playCrowdSound('boo'); // Torcida vaiando
+            showMessage("DEFENDEU!", "#e74c3c");
         } else {
-            playSound('goal');
             playerGoals++;
-            if (currentRound === 1) {
-                showMessage("GOL!", "Foi sorte ou habilidade?", "#2ecc71");
-            } else {
-                showMessage("GOL!", "", "#2ecc71");
-            }
+            playCrowdSound('cheer'); // Torcida vibrando
+            showMessage("GOL!", "#2ecc71");
         }
 
         updateScoreboard();
-        await sleep(2200);
+        await sleep(2000);
         msgOverlay.style.opacity = 0;
 
-        // Avança rodada ou finaliza
         if (currentRound < TOTAL_ROUNDS) {
             currentRound++;
             updateScoreboard();
@@ -476,18 +528,31 @@
 
     function showEndScreen() {
         const statsDiv = document.getElementById('final-stats');
+        const moralDiv = document.getElementById('moral-message');
         
-        // Traduz as letras para exibição
         const translate = { 'L': 'Esq', 'C': 'Meio', 'R': 'Dir' };
         const historyText = playerHistory.map(h => translate[h]).join(' ➔ ');
         
         statsDiv.innerHTML = `
-            <p><strong>SUA SEQUÊNCIA DE CHUTES:</strong></p>
-            <p style="letter-spacing: 1px; font-size: 0.9rem; color: #f1c40f;">${historyText}</p>
-            <hr style="border-color: #555; margin: 15px 0;">
             <p>Seus Gols: <strong style="color: var(--success-color);">${playerGoals}</strong></p>
             <p>Defesas da Máquina: <strong style="color: var(--danger-color);">${machineSaves}</strong></p>
+            <hr style="border-color: #555; margin: 15px 0;">
+            <p style="font-size: 0.9rem;">Sua sequência: <span style="color: #f1c40f;">${historyText}</span></p>
         `;
+        
+        if (mode === 1) {
+            document.getElementById('end-title').textContent = "O ALGORITMO APRENDEU";
+            moralDiv.innerHTML = `
+                <p><strong>Moral da História:</strong> Neste modo, o jogo começou sem saber nada sobre você, mas usou um <em>algoritmo de aprendizado</em> para mapear seus padrões. Humanos têm muita dificuldade em ser perfeitamente aleatórios.</p>
+                <p>Plataformas digitais usam seus cliques e comportamentos da mesma forma: aprendem o que você gosta e preveem sua próxima ação para mantê-lo engajado.</p>
+            `;
+        } else {
+            document.getElementById('end-title').textContent = "O JOGO ESTAVA MANIPULADO";
+            moralDiv.innerHTML = `
+                <p><strong>Moral da História:</strong> Não importava a sua habilidade ou estratégia. O código do jogo estava programado para ler a sua escolha no momento do clique e enviar o goleiro exatamente para o mesmo lado.</p>
+                <p>Muitos jogos de azar virtuais funcionam sob essa mesma premissa: a interface faz parecer que você tem escolha ou chance, mas o resultado matemático já está selado contra você.</p>
+            `;
+        }
         
         document.getElementById('end-screen').classList.remove('hidden');
         setButtonsState(false);
