@@ -109,7 +109,7 @@
 
         .goal-post {
             position: absolute;
-            top: 20px; left: 15%; width: 70%; height: 140px;
+            top: 30px; left: 15%; width: 70%; height: 160px;
             border: 8px solid var(--line-color);
             border-bottom: none;
             background: rgba(255, 255, 255, 0.1);
@@ -118,21 +118,20 @@
             background-position: 0 0, 10px 10px;
         }
 
-        /* Animações e Avatares SVG */
+        /* Avatares SVG */
         #goalkeeper {
             position: absolute;
-            top: 50px; left: 50%;
+            top: 70px; left: 50%;
             transform: translateX(-50%);
             width: 100px; height: 100px;
-            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
             z-index: 20;
-            transform-origin: center bottom;
+            transform-origin: center center;
         }
 
-        /* Animação de respiração/espera do goleiro */
         @keyframes idleGk {
             0% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-5px); }
+            50% { transform: translateX(-50%) translateY(-4px); }
             100% { transform: translateX(-50%) translateY(0); }
         }
         .idle { animation: idleGk 1.5s infinite ease-in-out; }
@@ -141,7 +140,7 @@
             position: absolute;
             bottom: 100px; left: 50%;
             transform: translateX(-50%);
-            width: 40px; height: 40px;
+            width: 36px; height: 36px;
             transition: all 0.4s ease-out;
             z-index: 30;
         }
@@ -155,7 +154,6 @@
             z-index: 40;
         }
 
-        /* Animação da perna chutando */
         .kicking-leg {
             transform-origin: 50% 10%;
             transition: transform 0.15s ease-in-out;
@@ -251,16 +249,11 @@
         <!-- SVG Goleiro -->
         <div id="goalkeeper" class="idle">
             <svg viewBox="0 0 100 100" width="100%" height="100%">
-                <!-- Cabeça -->
                 <circle cx="50" cy="20" r="12" fill="#f1c40f"/>
-                <!-- Corpo -->
                 <rect x="35" y="32" width="30" height="40" rx="5" fill="#e74c3c"/>
-                <!-- Braços -->
                 <rect x="5" y="35" width="90" height="8" rx="4" fill="#f1c40f"/>
-                <!-- Luvas -->
                 <circle cx="10" cy="39" r="6" fill="#ecf0f1"/>
                 <circle cx="90" cy="39" r="6" fill="#ecf0f1"/>
-                <!-- Pernas -->
                 <rect x="38" y="70" width="10" height="25" rx="3" fill="#222"/>
                 <rect x="52" y="70" width="10" height="25" rx="3" fill="#222"/>
             </svg>
@@ -282,16 +275,11 @@
         <!-- SVG Batedor -->
         <div id="kicker">
             <svg viewBox="0 0 100 150" width="100%" height="100%">
-                <!-- Cabeça -->
                 <circle cx="50" cy="30" r="15" fill="#f1c40f"/>
-                <!-- Corpo -->
                 <rect x="35" y="45" width="30" height="50" rx="5" fill="#3498db"/>
-                <!-- Braços -->
                 <rect x="25" y="50" width="10" height="40" rx="5" fill="#f1c40f" transform="rotate(15, 30, 50)"/>
                 <rect x="65" y="50" width="10" height="40" rx="5" fill="#f1c40f" transform="rotate(-15, 70, 50)"/>
-                <!-- Perna Esquerda (Apoio) -->
                 <rect x="38" y="90" width="12" height="45" rx="5" fill="#2c3e50"/>
-                <!-- Perna Direita (Chute - Articulada) -->
                 <g class="kicking-leg">
                     <rect x="52" y="90" width="12" height="45" rx="5" fill="#2c3e50"/>
                 </g>
@@ -311,65 +299,73 @@
 </div>
 
 <script>
-    // --- ÁUDIO (Mantido da versão anterior) ---
+    // --- SISTEMA DE ÁUDIO MELHORADO (Web Audio API) ---
     let audioCtx;
     function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-
-    function createNoiseBuffer() {
-        const bufferSize = audioCtx.sampleRate * 2;
-        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        const output = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
-        return buffer;
-    }
-
-    function playCrowdSound(type) {
-        if (!audioCtx) return;
-        const now = audioCtx.currentTime;
-        const noiseSrc = audioCtx.createBufferSource();
-        noiseSrc.buffer = createNoiseBuffer();
-        const noiseFilter = audioCtx.createBiquadFilter();
-        const noiseGain = audioCtx.createGain();
-        noiseSrc.connect(noiseFilter).connect(noiseGain).connect(audioCtx.destination);
-
-        if (type === 'cheer') {
-            noiseFilter.type = 'bandpass';
-            noiseFilter.frequency.setValueAtTime(500, now);
-            noiseFilter.frequency.linearRampToValueAtTime(1500, now + 0.5);
-            noiseGain.gain.setValueAtTime(0, now);
-            noiseGain.gain.linearRampToValueAtTime(0.8, now + 0.2);
-            noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
-        } else if (type === 'boo') {
-            noiseFilter.type = 'lowpass';
-            noiseFilter.frequency.setValueAtTime(800, now);
-            noiseFilter.frequency.linearRampToValueAtTime(300, now + 1);
-            noiseGain.gain.setValueAtTime(0, now);
-            noiseGain.gain.linearRampToValueAtTime(0.6, now + 0.3);
-            noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 2);
-        }
-        noiseSrc.start(now);
-    }
 
     function playSound(type) {
         if (!audioCtx) return;
         const now = audioCtx.currentTime;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain).connect(audioCtx.destination);
+
         if (type === 'whistle') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain).connect(audioCtx.destination);
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, now);
-            osc.frequency.linearRampToValueAtTime(1200, now + 0.3);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-            osc.start(now); osc.stop(now + 0.3);
-        } else if (type === 'kick') {
+            osc.frequency.setValueAtTime(1400, now);
+            osc.frequency.setValueAtTime(1800, now + 0.15);
+            gain.gain.setValueAtTime(0.15, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+            osc.start(now); osc.stop(now + 0.4);
+        } 
+        else if (type === 'kick') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain).connect(audioCtx.destination);
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(150, now);
-            osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
-            gain.gain.setValueAtTime(0.3, now);
+            osc.frequency.setValueAtTime(120, now);
+            osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
+            gain.gain.setValueAtTime(0.4, now);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
             osc.start(now); osc.stop(now + 0.2);
+        }
+        else if (type === 'cheer' || type === 'boo') {
+            // Gerador de ruído estocástico otimizado para torcida
+            const bufferSize = audioCtx.sampleRate * 2.5;
+            const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            const noise = audioCtx.createBufferSource();
+            noise.buffer = buffer;
+
+            const filter = audioCtx.createBiquadFilter();
+            const gain = audioCtx.createGain();
+
+            noise.connect(filter);
+            filter.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'cheer') {
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(800, now);
+                filter.frequency.linearRampToValueAtTime(1600, now + 0.5);
+                filter.Q.value = 1;
+                
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.7, now + 0.3);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 1.8);
+            } else {
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(400, now);
+                filter.frequency.linearRampToValueAtTime(200, now + 1);
+                filter.Q.value = 3; // Dá o som ressoado de "uuuh" da vaia
+
+                gain.gain.setValueAtTime(0, now);
+                gain.gain.linearRampToValueAtTime(0.6, now + 0.3);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 2.0);
+            }
+            noise.start(now);
         }
     }
 
@@ -427,9 +423,8 @@
         initAudio();
         playSound('whistle');
         
-        gk.classList.remove('idle'); // Para a respiração do goleiro
+        gk.classList.remove('idle');
         
-        // Animação do batedor
         kicker.classList.add('is-kicking');
         await sleep(150);
         playSound('kick');
@@ -445,41 +440,41 @@
             }
         }
 
-        // Posição da bola dentro do gol
-        let ballX, ballY = "-200px";
-        if (playerChoice === 'L') ballX = "calc(-50% - 100px)";
+        // Posição ajustada para a bola entrar perfeitamente dentro do gol em todas as direções
+        let ballX, ballY = "-130px";
+        if (playerChoice === 'L') ballX = "calc(-50% - 95px)";
         else if (playerChoice === 'C') ballX = "-50%";
-        else if (playerChoice === 'R') ballX = "calc(-50% + 100px)";
+        else if (playerChoice === 'R') ballX = "calc(-50% + 95px)";
 
-        // Animação de Mergulho do Goleiro
+        // Movimento ajustado do Goleiro para cobrir a área corretamente
         let gkTransform;
         if (gkChoice === 'L') {
-            gkTransform = "translate(calc(-50% - 100px), 30px) rotate(-75deg)";
+            gkTransform = "translate(calc(-50% - 90px), 10px) rotate(-70deg) scale(0.9)";
         } else if (gkChoice === 'C') {
-            gkTransform = "translate(-50%, -40px) scale(1.1)"; // Pula no meio
+            gkTransform = "translate(-50%, -20px) scale(1.1)";
         } else if (gkChoice === 'R') {
-            gkTransform = "translate(calc(-50% + 100px), 30px) rotate(75deg)";
+            gkTransform = "translate(calc(-50% + 90px), 10px) rotate(70deg) scale(0.9)";
         }
 
-        ball.style.transform = `translate(${ballX}, ${ballY}) scale(0.5) rotate(720deg)`;
+        ball.style.transform = `translate(${ballX}, ${ballY}) scale(0.55) rotate(540deg)`;
         gk.style.transform = gkTransform;
         
         playerHistory.push(playerChoice);
-        await sleep(400);
+        await sleep(450);
 
         if (playerChoice === gkChoice) {
             machineSaves++;
-            playCrowdSound('boo');
+            playSound('boo');
             showMessage("DEFENDEU!", "#e74c3c");
         } else {
             playerGoals++;
-            playCrowdSound('cheer');
+            playSound('cheer');
             showMessage("GOL!", "#2ecc71");
         }
 
         updateScoreboard();
-        await sleep(1500);
-        kicker.classList.remove('is-kicking'); // Retorna perna
+        await sleep(1800);
+        kicker.classList.remove('is-kicking');
         msgOverlay.style.opacity = 0;
 
         if (currentRound < TOTAL_ROUNDS) {
