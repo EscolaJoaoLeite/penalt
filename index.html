@@ -73,15 +73,15 @@
             border: none;
             border-radius: 8px;
             cursor: pointer;
-            transition: transform 0.1s, opacity 0.3s;
+            transition: transform 0.1s;
             margin-top: 15px;
             width: 100%;
             max-width: 300px;
         }
         .btn-mode:active { transform: scale(0.95); }
         
-        .btn-modo1 { background-color: #9b59b6; box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4); }
-        .btn-modo2 { background-color: #e74c3c; box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4); }
+        .btn-modo1 { background-color: #9b59b6; }
+        .btn-modo2 { background-color: #e74c3c; }
         .btn-reset { background-color: var(--accent-color); padding: 15px 30px; margin-top: 20px; }
 
         /* Placar */
@@ -107,38 +107,41 @@
             margin-top: 30px;
         }
 
-        /* O Gol (Travessão e Redes) */
         .goal-post {
             position: absolute;
-            top: 20px; 
-            left: 15%; 
-            width: 70%; 
-            height: 140px;
+            top: 20px; left: 15%; width: 70%; height: 140px;
             border: 8px solid var(--line-color);
             border-bottom: none;
             background: rgba(255, 255, 255, 0.1);
-            background-image: 
-                linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%, rgba(255,255,255,0.2)), 
-                linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%, rgba(255,255,255,0.2));
+            background-image: linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%, rgba(255,255,255,0.2)), linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.2) 75%, rgba(255,255,255,0.2));
             background-size: 20px 20px;
             background-position: 0 0, 10px 10px;
         }
 
-        /* Personagens Animados */
+        /* Animações e Avatares SVG */
         #goalkeeper {
             position: absolute;
-            top: 60px; left: 50%;
+            top: 50px; left: 50%;
             transform: translateX(-50%);
-            font-size: 4rem;
-            transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            width: 100px; height: 100px;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
             z-index: 20;
+            transform-origin: center bottom;
         }
+
+        /* Animação de respiração/espera do goleiro */
+        @keyframes idleGk {
+            0% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-5px); }
+            100% { transform: translateX(-50%) translateY(0); }
+        }
+        .idle { animation: idleGk 1.5s infinite ease-in-out; }
 
         #ball {
             position: absolute;
-            bottom: 90px; left: 50%;
+            bottom: 100px; left: 50%;
             transform: translateX(-50%);
-            font-size: 2.2rem;
+            width: 40px; height: 40px;
             transition: all 0.4s ease-out;
             z-index: 30;
         }
@@ -147,16 +150,24 @@
             position: absolute;
             bottom: 20px; left: 50%;
             transform: translateX(-50%);
-            font-size: 4rem;
+            width: 80px; height: 120px;
             transition: all 0.3s;
             z-index: 40;
+        }
+
+        /* Animação da perna chutando */
+        .kicking-leg {
+            transform-origin: 50% 10%;
+            transition: transform 0.15s ease-in-out;
+        }
+        .is-kicking .kicking-leg {
+            transform: rotate(-45deg);
         }
 
         /* Controles */
         #controls-container {
             background: rgba(0,0,0,0.9);
             padding: 15px;
-            text-align: center;
         }
 
         #controls {
@@ -176,7 +187,6 @@
         }
         .dir-btn:disabled { background-color: #7f8c8d; cursor: not-allowed; opacity: 0.5; }
 
-        /* Overlay de Mensagens */
         #message-overlay {
             position: absolute;
             top: 40%; left: 50%;
@@ -185,14 +195,12 @@
             font-weight: bold;
             text-shadow: 2px 2px 15px rgba(0,0,0,1);
             z-index: 50;
-            pointer-events: none;
             opacity: 0;
             transition: opacity 0.2s;
             text-align: center;
             width: 100%;
         }
 
-        /* Resumo Final */
         .stats-box {
             background: rgba(255,255,255,0.1);
             padding: 20px;
@@ -202,15 +210,12 @@
             width: 100%;
             border-left: 4px solid var(--accent-color);
         }
-        
-        .moral-text { font-size: 1rem; color: #ccc; text-align: left; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
     
-    <!-- Tela Inicial -->
     <div id="start-screen" class="screen">
         <h1>DESAFIE O SISTEMA</h1>
         <h2>Escolha seu modo de jogo</h2>
@@ -227,17 +232,13 @@
         </button>
     </div>
 
-    <!-- Tela de Fim de Jogo -->
     <div id="end-screen" class="screen hidden">
         <h1 id="end-title" style="color: var(--danger-color); font-size: 1.8rem;">A ILUSÃO DO CONTROLE</h1>
-        
         <div class="stats-box" id="final-stats"></div>
-        <div class="moral-text" id="moral-message"></div>
-        
+        <div id="moral-message" style="font-size: 1rem; color: #ccc; text-align: left;"></div>
         <button class="btn-mode btn-reset" onclick="resetGame()">Voltar ao Início</button>
     </div>
 
-    <!-- Interface do Jogo -->
     <div id="scoreboard">
         <span>Gols: <span id="score-player" class="score-player">0</span></span>
         <span>Rodada: <span id="round-counter">1</span>/10</span>
@@ -246,9 +247,57 @@
 
     <div id="field">
         <div class="goal-post"></div>
-        <div id="goalkeeper">🧤</div>
-        <div id="ball">⚽</div>
-        <div id="kicker">🧍</div>
+        
+        <!-- SVG Goleiro -->
+        <div id="goalkeeper" class="idle">
+            <svg viewBox="0 0 100 100" width="100%" height="100%">
+                <!-- Cabeça -->
+                <circle cx="50" cy="20" r="12" fill="#f1c40f"/>
+                <!-- Corpo -->
+                <rect x="35" y="32" width="30" height="40" rx="5" fill="#e74c3c"/>
+                <!-- Braços -->
+                <rect x="5" y="35" width="90" height="8" rx="4" fill="#f1c40f"/>
+                <!-- Luvas -->
+                <circle cx="10" cy="39" r="6" fill="#ecf0f1"/>
+                <circle cx="90" cy="39" r="6" fill="#ecf0f1"/>
+                <!-- Pernas -->
+                <rect x="38" y="70" width="10" height="25" rx="3" fill="#222"/>
+                <rect x="52" y="70" width="10" height="25" rx="3" fill="#222"/>
+            </svg>
+        </div>
+
+        <!-- SVG Bola -->
+        <div id="ball">
+            <svg viewBox="0 0 100 100" width="100%" height="100%">
+                <circle cx="50" cy="50" r="45" fill="#fff" stroke="#000" stroke-width="3"/>
+                <polygon points="50,20 70,35 62,60 38,60 30,35" fill="#000"/>
+                <line x1="50" y1="20" x2="50" y2="5" stroke="#000" stroke-width="3"/>
+                <line x1="70" y1="35" x2="90" y2="40" stroke="#000" stroke-width="3"/>
+                <line x1="62" y1="60" x2="75" y2="85" stroke="#000" stroke-width="3"/>
+                <line x1="38" y1="60" x2="25" y2="85" stroke="#000" stroke-width="3"/>
+                <line x1="30" y1="35" x2="10" y2="40" stroke="#000" stroke-width="3"/>
+            </svg>
+        </div>
+
+        <!-- SVG Batedor -->
+        <div id="kicker">
+            <svg viewBox="0 0 100 150" width="100%" height="100%">
+                <!-- Cabeça -->
+                <circle cx="50" cy="30" r="15" fill="#f1c40f"/>
+                <!-- Corpo -->
+                <rect x="35" y="45" width="30" height="50" rx="5" fill="#3498db"/>
+                <!-- Braços -->
+                <rect x="25" y="50" width="10" height="40" rx="5" fill="#f1c40f" transform="rotate(15, 30, 50)"/>
+                <rect x="65" y="50" width="10" height="40" rx="5" fill="#f1c40f" transform="rotate(-15, 70, 50)"/>
+                <!-- Perna Esquerda (Apoio) -->
+                <rect x="38" y="90" width="12" height="45" rx="5" fill="#2c3e50"/>
+                <!-- Perna Direita (Chute - Articulada) -->
+                <g class="kicking-leg">
+                    <rect x="52" y="90" width="12" height="45" rx="5" fill="#2c3e50"/>
+                </g>
+            </svg>
+        </div>
+
         <div id="message-overlay"></div>
     </div>
 
@@ -262,84 +311,42 @@
 </div>
 
 <script>
-    // --- ÁUDIO (Web Audio API Avançada para Torcida) ---
+    // --- ÁUDIO (Mantido da versão anterior) ---
     let audioCtx;
-    function initAudio() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
+    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 
     function createNoiseBuffer() {
-        const bufferSize = audioCtx.sampleRate * 2; // 2 segundos
+        const bufferSize = audioCtx.sampleRate * 2;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const output = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-            output[i] = Math.random() * 2 - 1;
-        }
+        for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
         return buffer;
     }
 
     function playCrowdSound(type) {
         if (!audioCtx) return;
         const now = audioCtx.currentTime;
-        
-        // Gerador de ruído branco (simula a multidão)
         const noiseSrc = audioCtx.createBufferSource();
         noiseSrc.buffer = createNoiseBuffer();
-        
         const noiseFilter = audioCtx.createBiquadFilter();
         const noiseGain = audioCtx.createGain();
-        
-        noiseSrc.connect(noiseFilter);
-        noiseFilter.connect(noiseGain);
-        noiseGain.connect(audioCtx.destination);
+        noiseSrc.connect(noiseFilter).connect(noiseGain).connect(audioCtx.destination);
 
         if (type === 'cheer') {
-            // Torcida Vibrando (Gol) - Frequências mais altas e abertura de filtro
             noiseFilter.type = 'bandpass';
             noiseFilter.frequency.setValueAtTime(500, now);
             noiseFilter.frequency.linearRampToValueAtTime(1500, now + 0.5);
-            
             noiseGain.gain.setValueAtTime(0, now);
             noiseGain.gain.linearRampToValueAtTime(0.8, now + 0.2);
             noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
-            
-            // Adiciona um tom harmônico de comemoração
-            const osc = audioCtx.createOscillator();
-            const oscGain = audioCtx.createGain();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(400, now);
-            osc.frequency.linearRampToValueAtTime(600, now + 0.5);
-            oscGain.gain.setValueAtTime(0, now);
-            oscGain.gain.linearRampToValueAtTime(0.3, now + 0.2);
-            oscGain.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
-            osc.connect(oscGain).connect(audioCtx.destination);
-            osc.start(now);
-            osc.stop(now + 1.5);
-
         } else if (type === 'boo') {
-            // Torcida Vaiando (Defesa) - Frequências baixas e ressonância
             noiseFilter.type = 'lowpass';
             noiseFilter.frequency.setValueAtTime(800, now);
             noiseFilter.frequency.linearRampToValueAtTime(300, now + 1);
-            
             noiseGain.gain.setValueAtTime(0, now);
             noiseGain.gain.linearRampToValueAtTime(0.6, now + 0.3);
             noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 2);
-
-            // Tom harmônico de frustração
-            const osc = audioCtx.createOscillator();
-            const oscGain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(200, now);
-            osc.frequency.linearRampToValueAtTime(100, now + 1);
-            oscGain.gain.setValueAtTime(0, now);
-            oscGain.gain.linearRampToValueAtTime(0.2, now + 0.3);
-            oscGain.gain.exponentialRampToValueAtTime(0.01, now + 2);
-            osc.connect(oscGain).connect(audioCtx.destination);
-            osc.start(now);
-            osc.stop(now + 2);
         }
-        
         noiseSrc.start(now);
     }
 
@@ -349,7 +356,6 @@
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.connect(gain).connect(audioCtx.destination);
-
         if (type === 'whistle') {
             osc.type = 'sine';
             osc.frequency.setValueAtTime(800, now);
@@ -369,18 +375,13 @@
 
     // --- LÓGICA DO JOGO ---
     const TOTAL_ROUNDS = 10;
-    let mode = 1; // 1 = Aprendizado, 2 = Manipulado
-    let currentRound = 1;
-    let playerGoals = 0;
-    let machineSaves = 0;
-    let playerHistory = [];
+    let mode = 1, currentRound = 1, playerGoals = 0, machineSaves = 0, playerHistory = [];
 
     const ball = document.getElementById('ball');
     const gk = document.getElementById('goalkeeper');
     const kicker = document.getElementById('kicker');
     const msgOverlay = document.getElementById('message-overlay');
     const buttons = document.querySelectorAll('.dir-btn');
-    
     const sleep = ms => new Promise(r => setTimeout(r, ms));
 
     function startGame(selectedMode) {
@@ -392,55 +393,33 @@
     }
 
     function resetGame() {
-        currentRound = 1;
-        playerGoals = 0;
-        machineSaves = 0;
-        playerHistory = [];
+        currentRound = 1; playerGoals = 0; machineSaves = 0; playerHistory = [];
         updateScoreboard();
         document.getElementById('end-screen').classList.add('hidden');
         document.getElementById('start-screen').classList.remove('hidden');
         resetPositions();
     }
 
-    function setButtonsState(disabled) {
-        buttons.forEach(btn => btn.disabled = disabled);
-    }
+    function setButtonsState(disabled) { buttons.forEach(btn => btn.disabled = disabled); }
+    function showMessage(text, color) { msgOverlay.textContent = text; msgOverlay.style.color = color; msgOverlay.style.opacity = 1; }
 
-    function showMessage(text, color) {
-        msgOverlay.textContent = text;
-        msgOverlay.style.color = color;
-        msgOverlay.style.opacity = 1;
-    }
-
-    // Algoritmo do MODO 1
     function predictNextMove() {
-        if (playerHistory.length < 2) {
-            const choices = ['L', 'C', 'R'];
-            return choices[Math.floor(Math.random() * choices.length)];
-        }
+        if (playerHistory.length < 2) return ['L', 'C', 'R'][Math.floor(Math.random() * 3)];
         let lastMove = playerHistory[playerHistory.length - 1];
-        let nextMoveCounts = { 'L': 0, 'C': 0, 'R': 0 };
-
+        let nextCounts = { 'L': 0, 'C': 0, 'R': 0 };
         for (let i = 0; i < playerHistory.length - 1; i++) {
-            if (playerHistory[i] === lastMove) {
-                nextMoveCounts[playerHistory[i + 1]]++;
-            }
+            if (playerHistory[i] === lastMove) nextCounts[playerHistory[i + 1]]++;
         }
-        
-        let predictedMove = 'C';
-        let maxCount = -1;
-        for (const [dir, count] of Object.entries(nextMoveCounts)) {
-            if (count > maxCount) {
-                maxCount = count;
-                predictedMove = dir;
-            }
+        let max = -1, predicted = 'C';
+        for (const [dir, count] of Object.entries(nextCounts)) {
+            if (count > max) { max = count; predicted = dir; }
         }
-        if (maxCount === 0) {
-            let totalCounts = { 'L': 0, 'C': 0, 'R': 0 };
-            playerHistory.forEach(m => totalCounts[m]++);
-            predictedMove = Object.keys(totalCounts).reduce((a, b) => totalCounts[a] > totalCounts[b] ? a : b);
+        if (max === 0) {
+            let total = { 'L': 0, 'C': 0, 'R': 0 };
+            playerHistory.forEach(m => total[m]++);
+            predicted = Object.keys(total).reduce((a, b) => total[a] > total[b] ? a : b);
         }
-        return predictedMove;
+        return predicted;
     }
 
     async function shoot(playerChoice) {
@@ -448,60 +427,59 @@
         initAudio();
         playSound('whistle');
         
-        kicker.style.transform = "translate(-50%, -30px) scale(1.1)";
-        await sleep(300);
+        gk.classList.remove('idle'); // Para a respiração do goleiro
         
+        // Animação do batedor
+        kicker.classList.add('is-kicking');
+        await sleep(150);
         playSound('kick');
-        kicker.style.transform = "translate(-50%, 0) scale(1)";
 
-        // Decisão do Goleiro baseada no MODO
         let gkChoice;
-        
         if (mode === 2) {
-            // MODO 2: Totalmente Manipulado (Goleiro sempre defende)
             gkChoice = playerChoice;
         } else {
-            // MODO 1: Aprendizado
-            if (currentRound === 1) {
-                // Deixa o jogador ganhar a 1ª para dar confiança
-                gkChoice = playerChoice === 'L' ? 'R' : 'L';
-            } else {
+            if (currentRound === 1) gkChoice = playerChoice === 'L' ? 'R' : 'L';
+            else {
                 gkChoice = predictNextMove();
-                // O sistema garante uma taxa alta de vitória para a máquina caso o humano seja imprevisível
                 if (Math.random() > 0.6) gkChoice = playerChoice; 
             }
         }
 
-        // Física ajustada para a bola entrar na rede (-220px)
-        let ballX, ballY = "-220px";
-        if (playerChoice === 'L') ballX = "calc(-50% - 110px)";
+        // Posição da bola dentro do gol
+        let ballX, ballY = "-200px";
+        if (playerChoice === 'L') ballX = "calc(-50% - 100px)";
         else if (playerChoice === 'C') ballX = "-50%";
-        else if (playerChoice === 'R') ballX = "calc(-50% + 110px)";
+        else if (playerChoice === 'R') ballX = "calc(-50% + 100px)";
 
-        let gkX;
-        if (gkChoice === 'L') gkX = "calc(-50% - 110px)";
-        else if (gkChoice === 'C') gkX = "-50%";
-        else if (gkChoice === 'R') gkX = "calc(-50% + 110px)";
+        // Animação de Mergulho do Goleiro
+        let gkTransform;
+        if (gkChoice === 'L') {
+            gkTransform = "translate(calc(-50% - 100px), 30px) rotate(-75deg)";
+        } else if (gkChoice === 'C') {
+            gkTransform = "translate(-50%, -40px) scale(1.1)"; // Pula no meio
+        } else if (gkChoice === 'R') {
+            gkTransform = "translate(calc(-50% + 100px), 30px) rotate(75deg)";
+        }
 
-        ball.style.transform = `translate(${ballX}, ${ballY}) scale(0.6) rotate(360deg)`;
-        gk.style.transform = `translateX(${gkX})`;
+        ball.style.transform = `translate(${ballX}, ${ballY}) scale(0.5) rotate(720deg)`;
+        gk.style.transform = gkTransform;
         
         playerHistory.push(playerChoice);
-
-        await sleep(400); // Tempo da bola até o gol
+        await sleep(400);
 
         if (playerChoice === gkChoice) {
             machineSaves++;
-            playCrowdSound('boo'); // Torcida vaiando
+            playCrowdSound('boo');
             showMessage("DEFENDEU!", "#e74c3c");
         } else {
             playerGoals++;
-            playCrowdSound('cheer'); // Torcida vibrando
+            playCrowdSound('cheer');
             showMessage("GOL!", "#2ecc71");
         }
 
         updateScoreboard();
-        await sleep(2000);
+        await sleep(1500);
+        kicker.classList.remove('is-kicking'); // Retorna perna
         msgOverlay.style.opacity = 0;
 
         if (currentRound < TOTAL_ROUNDS) {
@@ -517,7 +495,7 @@
     function resetPositions() {
         ball.style.transform = "translateX(-50%) rotate(0deg)";
         gk.style.transform = "translateX(-50%)";
-        kicker.style.transform = "translateX(-50%)";
+        gk.classList.add('idle');
     }
 
     function updateScoreboard() {
@@ -529,35 +507,26 @@
     function showEndScreen() {
         const statsDiv = document.getElementById('final-stats');
         const moralDiv = document.getElementById('moral-message');
-        
         const translate = { 'L': 'Esq', 'C': 'Meio', 'R': 'Dir' };
-        const historyText = playerHistory.map(h => translate[h]).join(' ➔ ');
         
         statsDiv.innerHTML = `
             <p>Seus Gols: <strong style="color: var(--success-color);">${playerGoals}</strong></p>
             <p>Defesas da Máquina: <strong style="color: var(--danger-color);">${machineSaves}</strong></p>
             <hr style="border-color: #555; margin: 15px 0;">
-            <p style="font-size: 0.9rem;">Sua sequência: <span style="color: #f1c40f;">${historyText}</span></p>
+            <p style="font-size: 0.9rem;">Sua sequência: <span style="color: #f1c40f;">${playerHistory.map(h => translate[h]).join(' ➔ ')}</span></p>
         `;
         
         if (mode === 1) {
             document.getElementById('end-title').textContent = "O ALGORITMO APRENDEU";
-            moralDiv.innerHTML = `
-                <p><strong>Moral da História:</strong> Neste modo, o jogo começou sem saber nada sobre você, mas usou um <em>algoritmo de aprendizado</em> para mapear seus padrões. Humanos têm muita dificuldade em ser perfeitamente aleatórios.</p>
-                <p>Plataformas digitais usam seus cliques e comportamentos da mesma forma: aprendem o que você gosta e preveem sua próxima ação para mantê-lo engajado.</p>
-            `;
+            moralDiv.innerHTML = `<p><strong>Moral da História:</strong> Neste modo, o jogo começou sem saber nada sobre você, mas usou um <em>algoritmo de aprendizado</em> para mapear seus padrões. Humanos têm muita dificuldade em ser perfeitamente aleatórios. Plataformas digitais usam seus cliques da mesma forma para prever sua próxima ação.</p>`;
         } else {
             document.getElementById('end-title').textContent = "O JOGO ESTAVA MANIPULADO";
-            moralDiv.innerHTML = `
-                <p><strong>Moral da História:</strong> Não importava a sua habilidade ou estratégia. O código do jogo estava programado para ler a sua escolha no momento do clique e enviar o goleiro exatamente para o mesmo lado.</p>
-                <p>Muitos jogos de azar virtuais funcionam sob essa mesma premissa: a interface faz parecer que você tem escolha ou chance, mas o resultado matemático já está selado contra você.</p>
-            `;
+            moralDiv.innerHTML = `<p><strong>Moral da História:</strong> Não importava a sua habilidade. O código do jogo estava programado para ler a sua escolha no momento do clique e enviar o goleiro exatamente para o mesmo lado. Muitos jogos de azar virtuais funcionam sob essa mesma premissa: a interface faz parecer que você tem escolha, mas o resultado matemático já está selado.</p>`;
         }
         
         document.getElementById('end-screen').classList.remove('hidden');
         setButtonsState(false);
     }
 </script>
-
 </body>
 </html>
